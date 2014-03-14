@@ -1,0 +1,32 @@
+.cm-s-wisdm-script span.cm-matlab {
+	font-weight:bold;
+	color:DarkSlateBlue;
+}
+
+
+.cm-s-jfm-doc span.cm-heading1,span.cm-heading2,span.cm-heading3 {
+	font-weight:bold;
+	color:DarkSlateBlue;
+}
+.cm-s-jfm-doc span.cm-heading1 {font-size:19px; line-height:30px;}
+.cm-s-jfm-doc span.cm-heading2 {font-size:17px; line-height:26px;}
+.cm-s-jfm-doc span.cm-heading3 {font-size:16px; line-height:22px; color:DarkSlateBlue; font-weight:bold}
+.cm-s-jfm-doc span.cm-normal,span.cm-comment,span.cm-reference,span.cm-bold,span.cm-italics {
+	font-size:13px;line-height:13px;
+}
+.cm-s-jfm-doc span.cm-spelling-error {
+	font-size:13px;line-height:13px;
+	text-decoration:underline;color:rgb(100,50,50);
+}
+.cm-s-jfm-doc span.cm-bold {font-weight:bold; color:MidnightBlue}
+.cm-s-jfm-doc span.cm-italics {font-style:italic; color:MidnightBlue}
+.cm-s-jfm-doc span.cm-comment {color:rgb(160,70,80);}
+.cm-s-jfm-doc span.cm-references {color:DarkSlateBlue;}
+.cm-s-jfm-doc span.cm-reference {color:Blue;}
+.cm-s-jfm-doc span.cm-reference-found {color:Green; font-weight:bold;}
+.cm-s-jfm-doc span.cm-reference-found:hover {background-color:lightgray}
+.cm-s-jfm-doc span.cm-reference-not-found {color:Blue;font-weight:bold;}
+.cm-s-jfm-doc span.cm-reference-multiple-found {color:DarkRed;font-weight:bold;}
+
+.cm-s-jfm-doc span.cm-caption {color:DarkSlateBlue; font-weight:bold; font-size:12px;}
+.cm-s-jfm-doc span.cm-syntax {color:DarkMagenta; font-size:12px;}
