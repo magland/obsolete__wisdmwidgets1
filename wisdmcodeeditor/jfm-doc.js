@@ -1,5 +1,5 @@
 //require("$wisdmpages$/core/fileuploader.js");
-require('$wisdmpages$/3rdparty/spellcheck/spellcheck.js');
+require('wisdmjs:/3rdparty/spellcheck/spellcheck.js');
 
 var jfm_doc_defined=false;
 function define_jfm_doc() {

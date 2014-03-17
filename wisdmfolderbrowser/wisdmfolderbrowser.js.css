@@ -1,0 +1,20 @@
+.refresh_button {
+	margin:0px;
+	background:url('$wisdmpages$/resources/images/themes/wisdm/refresh16.png');
+}
+.view_button {
+	margin:3px;
+	background:url('$wisdmpages$/resources/images/themes/wisdm/preview16.png');
+}
+.create_app_button {
+	margin:3px;
+	background:url('$wisdmpages$/resources/images/yusukekamiyamane/application-blue.png');
+}
+.fb_button {
+	position:relative;
+	display:inline-block;
+	cursor:pointer;
+	width:16px;
+	height:16px;
+	repeat:none;
+}

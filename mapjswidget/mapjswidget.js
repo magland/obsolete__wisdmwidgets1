@@ -1,28 +1,28 @@
-require('pages:/3rdparty/mapjs/lib/jquery.mousewheel-3.1.3.js');
-require('pages:/3rdparty/mapjs/lib/jquery.hotkeys.js');
-require('pages:/3rdparty/mapjs//lib/jquery.hammer.min.js');
-require('pages:/3rdparty/mapjs/lib/underscore-1.4.4.js');
-require('pages:/3rdparty/mapjs/lib/kinetic-v4.5.4.js');
-require('pages:/3rdparty/mapjs/lib/color-0.4.1.min.js');
-require('pages:/3rdparty/mapjs/src/kinetic.clip.js');
-require('pages:/3rdparty/mapjs/src/kinetic.idea.js');
-require('pages:/3rdparty/mapjs/src/kinetic.connector.js');
-require('pages:/3rdparty/mapjs/src/kinetic.link.js');
-require('pages:/3rdparty/mapjs/src/observable.js');
-require('pages:/3rdparty/mapjs/src/mapjs.js');
-require('pages:/3rdparty/mapjs/src/url-helper.js');
-require('pages:/3rdparty/mapjs/src/content.js');
-require('pages:/3rdparty/mapjs/src/layout.js');
-require('pages:/3rdparty/mapjs/src/clipboard.js');
-require('pages:/3rdparty/mapjs/src/map-model.js');
-require('pages:/3rdparty/mapjs/src/drag-and-drop.js');
-require('pages:/3rdparty/mapjs/src/kinetic-mediator.js');
-require('pages:/3rdparty/mapjs/src/map-toolbar-widget.js');
-require('pages:/3rdparty/mapjs/src/png-exporter.js');
-require('pages:/3rdparty/mapjs/src/map-widget.js');
-require('pages:/3rdparty/mapjs/src/link-edit-widget.js');
-require('pages:/3rdparty/mapjs/src/image-drop-widget.js');
-require('pages:/3rdparty/mapjs/test/perftests.js');
+require('mapjs:/lib/jquery.mousewheel-3.1.3.js');
+require('mapjs:/lib/jquery.hotkeys.js');
+require('mapjs:/lib/jquery.hammer.min.js');
+require('mapjs:/lib/underscore-1.4.4.js');
+require('mapjs:/lib/kinetic-v4.5.4.js');
+require('mapjs:/lib/color-0.4.1.min.js');
+require('mapjs:/src/kinetic.clip.js');
+require('mapjs:/src/kinetic.idea.js');
+require('mapjs:/src/kinetic.connector.js');
+require('mapjs:/src/kinetic.link.js');
+require('mapjs:/src/observable.js');
+require('mapjs:/src/mapjs.js');
+require('mapjs:/src/url-helper.js');
+require('mapjs:/src/content.js');
+require('mapjs:/src/layout.js');
+require('mapjs:/src/clipboard.js');
+require('mapjs:/src/map-model.js');
+require('mapjs:/src/drag-and-drop.js');
+require('mapjs:/src/kinetic-mediator.js');
+require('mapjs:/src/map-toolbar-widget.js');
+require('mapjs:/src/png-exporter.js');
+require('mapjs:/src/map-widget.js');
+require('mapjs:/src/link-edit-widget.js');
+require('mapjs:/src/image-drop-widget.js');
+//require('mapjs:/test/perftests.js');
 
 
 /*
@@ -36,19 +36,22 @@ function MapJSWidget() {
 	this.setSize=function(W,H) {m_width=W; m_height=H; update_layout();};
 	this.initialize=function() {return _initialize();};
 	this.setMap=function(map) {return _setMap(map);};
-	this.getMap=function() {return _getMap();};
+	this.getMap=function(node_id) {return _getMap(node_id);};
 	this.setInputEnabled=function(val) {m_input_enabled=val; m_map_model.setInputEnabled(val);};
 	this.onOpenAttachment=function(callback) {m_attachment_callback=callback;};
 	this.getNodeData=function(node_id) {return _getNodeData(node_id);};
 	this.setNodeAttachment=function(node_id,attachment) {_setNodeAttachment(node_id,attachment);};
 	this.addNode=function(parent_node_id,node_data) {_addNode(parent_node_id,node_data);};
+	this.replaceNode=function(node_id,node_data) {_replaceNode(node_id,node_data);};
+	this.removeNode=function(node_id) {_removeNode(node_id);};
 	this.getRootNodeId=function() {return (m_idea||{}).id||null;};
 	this.setStyleFunction=function(func) {m_style_function=func;};
 	this.testfunc=function(params) {return _testfunc(params);};
 	this.getSelectedNodeId=function() {return _getSelectedNodeId();};
 	this.onKeyPressed=function(callback) {m_div.bind('on-key-pressed',function(evt,obj) {callback(obj);});};
 	this.refreshMap=function() {that.setMap(that.getMap());};
-	
+	this.onContextMenuRequested=function(callback) {m_div.bind('on-context-menu-requested',function(evt,obj) {callback(obj);});};	
+	this.onSelectedNodeChanged=function(callback) {m_div.bind('on-selected-node-changed',function() {callback();});};
 	
 	var m_div_id='mapjswidget-'+makeRandomId(5); //seems to be important that the div has a unique id
 	var m_div=$('<div id="'+m_div_id+'"></div>');
@@ -56,7 +59,7 @@ function MapJSWidget() {
 	var m_idea={};
 	var m_last_ids={last_neg:0,last_pos:0};
 	var m_input_enabled=true;
-	var m_attachment_callback=function(node_id) {console.log('attachment callback not defined',node_id);};
+	var m_attachment_callback=function(node_id) {console.log ('attachment callback not defined',node_id);};
 	var m_style_function=null;
 	
 	//initialize the map model
@@ -73,6 +76,14 @@ function MapJSWidget() {
 	
 	m_map_model.addEventListener('nodeTitleChanged',function(node) {
 		update_node_styles();
+	});
+	
+	m_map_model.addEventListener('contextMenuRequested',function(node_id,x,y) {
+		m_div.trigger('on-context-menu-requested',{node_id:node_id,x:x,y:y});
+	});
+	
+	m_map_model.addEventListener('nodeSelectionChanged',function() {
+		m_div.trigger('on-selected-node-changed');
 	});
 	
 	$(document).keypress(function (evt) {
@@ -104,6 +115,7 @@ function MapJSWidget() {
 	function convert_node(node) {
 		var ret={};
 		ret.title=node.title||'';
+		ret.attributes=$.extend({},(node.attributes||{}));
 		ret.attr={};
 		if (node.attachment) ret.attr.attachment=$.extend({},node.attachment);
 		if (node.collapsed) ret.attr.collapsed=true;
@@ -112,28 +124,44 @@ function MapJSWidget() {
 		ret.ideas={};
 		var children=node.children||[];
 		
+		/*
+		var max_items_to_display=8;
+		if (children.length>max_items_to_display) {
+			ret.ideas_are_hidden=true;
+			ret.ideas={};
+			var tmp1=convert_node({title:'['+children.length+' items]',collapsed:true});
+			tmp1.ideas={};
+			ret.ideas[tmp1.id]=tmp1;
+			ret.holder_id=tmp1.id;
+		}
+		*/
+		var holder=ret;
+		//if (ret.ideas_are_hidden) holder=ret.ideas[ret.holder_id];
 		for (var i=0; i<children.length; i++) {
 			var tmp=convert_node(children[i]);
-			ret.ideas[tmp.id]=tmp;
+			holder.ideas[tmp.id]=tmp;
 		}
-		var max_items_to_display=10;
-		if (children.length>max_items_to_display) {
-			ret.hidden_ideas=ret.ideas;
-			ret.ideas={};
-			var tmp1=convert_node({title:'['+children.length+' items]'});
-			ret.ideas[tmp1.id]=tmp1;
-		}
+		
 		return ret;
 	}
 	function deconvert_node(idea,recursive) {
 		var node={};
 		node.title=idea.title||'';
+		node.attributes=$.extend({},(idea.attributes||{}));
 		node.children=[];
 		if ((idea.attr)&&(idea.attr.attachment)) node.attachment=$.extend({},idea.attr.attachment);
 		if ((idea.attr)&&(idea.attr.collapsed)) node.collapsed=true;
-		var ideas;
-		if (idea.hidden_ideas) ideas=idea.hidden_ideas;
+		var ideas=idea.ideas||{};
+		/*
+		if ((idea.ideas_are_hidden)&&(idea.holder_id)) {
+			ideas=idea.ideas[idea.holder_id].ideas||{};
+			for (var kk in idea.ideas) {
+				if (kk!=idea.holder_id) ideas.push(idea.ideas[kk]);
+			}
+		}
 		else ideas=idea.ideas||{};
+		*/
+		
 		if (recursive) {
 			for (var idea_key in ideas) {
 				var is_negative=(Number(idea_key)<0);
@@ -169,6 +197,7 @@ function MapJSWidget() {
 	}
 	function _getSelectedNodeId() {
 		var idea=get_selected_idea();
+		if (!idea) return null;
 		var node_id=idea.id||null;
 		return node_id;
 	}
@@ -188,7 +217,6 @@ function MapJSWidget() {
 	}
 	function do_paste() {
 		var tmp=localStorage.mapjswidget_clipboard||'';
-		console.log(tmp);
 		try {
 			var node=JSON.parse(tmp);
 		}
@@ -222,7 +250,38 @@ function MapJSWidget() {
 		if (!idea) return;
 		if (!idea.ideas) idea.ideas={};
 		idea.ideas[get_next_id()]=convert_node(node_data);
-		that.setMap(that.getMap());
+		//that.setMap(that.getMap()); //removed for efficiency... caller should use that.refreshMap();
+	}
+	function _replaceNode(node_id,node_data) {
+		var parent_node_id=(m_idea.findParent(node_id)||{}).id||null;
+		if (!parent_node_id) return;
+		var par_idea=get_idea_from_id(parent_node_id);
+		if (!par_idea) return;
+		
+		var new_ideas={};
+		for (var key in par_idea.ideas) {
+			if (par_idea.ideas[key].id==node_id)
+				new_ideas[key]=convert_node(node_data);
+			else
+				new_ideas[key]=par_idea.ideas[key];
+		}
+		par_idea.ideas=new_ideas;
+	}
+	
+	function _removeNode(node_id) {
+		
+		var parent_node_id=(m_idea.findParent(node_id)||{}).id||null;
+		if (!parent_node_id) return;
+		var par_idea=get_idea_from_id(parent_node_id);
+		if (!par_idea) return;
+		if (!par_idea.ideas) return;
+		var new_ideas={};
+		for (var key in par_idea.ideas) {
+			if (par_idea.ideas[key].id!=node_id)
+				new_ideas[key]=par_idea.ideas[key];
+		}
+		par_idea.ideas=new_ideas;
+
 	}
 	
 	function _setMap(map) {
@@ -234,21 +293,35 @@ function MapJSWidget() {
 		m_idea=MAPJS.content(map_tmp);
 		update_node_styles();
 		
-		console.log('is_visible: ');
-		console.log(m_div.is(':visible'));
-		console.log(m_div.width());
-		console.log(m_div.height());
 		m_map_model.setIdea(m_idea);
 	}
-	function _getMap() {
+	function _getMap(node_id) {
 		var tmp=m_map_model.getIdea(); 
-		tmp=tmp.clone(tmp.id);
-		var root=deconvert_node(tmp,true);
+		if (!tmp) return null;
+		var tmp2=tmp;
+		if (node_id) {
+			tmp2=tmp.findSubIdeaById(node_id);
+			if (!tmp2) return null;
+		}
+		var tmp3=tmp.clone(tmp2.id);
+		var root=deconvert_node(tmp3,true);
 		return {root:root};
 	}
 	
 	function update_layout() {
 		m_div.css({position:'absolute',width:m_width,height:m_height});
+		schedule_resize_notification();
+	}
+	
+	var m_resize_notification_scheduled=false;
+	function schedule_resize_notification() {
+		if (m_resize_notification_scheduled) return;
+		m_resize_notification_scheduled=true;
+		setTimeout(do_resize_notification,200);
+		function do_resize_notification() {
+			m_resize_notification_scheduled=false;
+			m_div.trigger('on-resized');
+		}
 	}
 	
 	function update_node_styles() {
@@ -276,5 +349,4 @@ function MapJSWidget() {
 		}
 	}
 }
-
 
